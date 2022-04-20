@@ -1,4 +1,7 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 void main() {
   runApp(const MyApp());
@@ -51,7 +54,20 @@ class _MyHomePageState extends State<MyHomePage> {
   //int _counter = 0;
 
   // all the variables to save the form value here
-  String _name = 'Character';
+  //String _name = 'Character';
+  Map<String, String?> stringFormInput = {
+    'name': 'character',
+    'class': 'warrior',
+  };
+
+  Map<String, int?> numberFormInput = {
+    'health': 10,
+    'mp': 10,
+    'level': 1,
+    'attack': 1,
+    'defense': 1,
+    'speed': 1,
+  };
 
   // Global key that uniquely identifies the Form widget
   // and allows validation of the form.
@@ -74,6 +90,8 @@ class _MyHomePageState extends State<MyHomePage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Generating Character')),
         );
+        _formKey.currentState!.save();
+        //_name = "abi";
       }
     });
   }
@@ -122,8 +140,7 @@ class _MyHomePageState extends State<MyHomePage> {
         //     Image.asset('assets/images/0.png'),
         //   ],
         // ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
+        child: ListView(
           children: <Widget>[
             Container(
               padding: const EdgeInsets.all(10),
@@ -135,12 +152,50 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             Form(
               key: _formKey,
-              child: Column(
-                children: <Widget>[
-                  // Add TextFormFields and ElevatedButton here.
-                  _characterFormTextInput('Name'),
-                  _characterFormTextInput('Class'),
-                ],
+              child: Container(
+                padding: const EdgeInsets.all(30),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: <Widget>[
+                    // Add TextFormFields and ElevatedButton here.
+                    const Padding(padding: EdgeInsets.all(10)),
+                    _characterFormTextInput('Name', true),
+                    const Padding(padding: EdgeInsets.all(20)),
+
+                    const Divider(),
+                    const Text("Basic Stats"),
+                    _characterFormNumberInput('Health', true),
+                    const Padding(padding: EdgeInsets.all(10)),
+                    _characterFormNumberInput('MP', false),
+                    const Padding(padding: EdgeInsets.all(10)),
+                    _characterFormNumberInput('Level', false),
+                    const Padding(padding: EdgeInsets.all(20)),
+
+                    const Divider(),
+                    const Text("Extra Stats (Optional)"),
+                    _characterFormNumberInput('Attack', true),
+                    const Padding(padding: EdgeInsets.all(10)),
+                    _characterFormNumberInput('Defense', true),
+                    const Padding(padding: EdgeInsets.all(10)),
+                    _characterFormNumberInput('Speed', true),
+                    const Padding(padding: EdgeInsets.all(20)),
+
+                    // For testing purposes
+                    Text("Name : " + stringFormInput["name"].toString()),
+                    const Padding(padding: EdgeInsets.all(5)),
+                    Text("Health : " + numberFormInput["health"].toString()),
+                    const Padding(padding: EdgeInsets.all(5)),
+                    Text("MP : " + numberFormInput["mp"].toString()),
+                    const Padding(padding: EdgeInsets.all(5)),
+                    Text("Level : " + numberFormInput["level"].toString()),
+                    const Padding(padding: EdgeInsets.all(5)),
+                    Text("Attack : " + numberFormInput["attack"].toString()),
+                    const Padding(padding: EdgeInsets.all(5)),
+                    Text("Defense : " + numberFormInput["defense"].toString()),
+                    const Padding(padding: EdgeInsets.all(5)),
+                    Text("Speed : " + numberFormInput["speed"].toString()),
+                  ],
+                ),
               ),
             )
           ],
@@ -155,18 +210,74 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget _characterFormTextInput(String fieldName) {
+  Widget _characterFormTextInput(String fieldName, bool required) {
+    String label = fieldName;
+    if (!required) {
+      label = label + " (Optional)";
+    }
+
     return TextFormField(
       decoration: InputDecoration(
-        labelText: fieldName,
+        labelText: label,
+        //border: UnderlineInputBorder(),
       ),
       // The validator receives the text that the user has entered.
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Please do not leave the field empty';
+          if (required) {
+            return 'Please do not leave the field empty';
+          } else {
+            // Do something that mark that the attributes arent included
+            stringFormInput[fieldName.toLowerCase()] = null;
+          }
         }
         return null;
       },
+      onSaved: (String? value) {
+        //_name = value.toString();
+        if (value != null && value.isNotEmpty) {
+          stringFormInput.remove(fieldName.toLowerCase());
+        }
+      },
+    );
+  }
+
+  Widget _characterFormNumberInput(String fieldName, bool required) {
+    String label = fieldName;
+    if (!required) {
+      label = label + " (Optional)";
+    }
+
+    return TextFormField(
+      decoration: InputDecoration(
+        labelText: label,
+        //border: UnderlineInputBorder(),
+      ),
+      // The validator receives the text that the user has entered.
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          if (required) {
+            return 'Please do not leave the field empty';
+          } else {
+            // Do something that mark that the attributes arent included
+            numberFormInput.remove(fieldName.toLowerCase());
+          }
+        } else if (int.parse(value) < 1) {
+          return 'Value cannot be less than 1';
+        }
+        return null;
+      },
+      onSaved: (value) {
+        //_name = value.toString();
+        if (value != null && value.isNotEmpty) {
+          numberFormInput[fieldName.toLowerCase()] =
+              int.parse(value.toString());
+        }
+      },
+      keyboardType: TextInputType.number,
+      inputFormatters: <TextInputFormatter>[
+        FilteringTextInputFormatter.digitsOnly
+      ],
     );
   }
 }
