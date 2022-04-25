@@ -57,7 +57,6 @@ class _MyHomePageState extends State<MyHomePage> {
   //String _name = 'Character';
   Map<String, String?> stringFormInput = {
     'name': 'character',
-    'class': 'warrior',
   };
 
   Map<String, int?> numberFormInput = {
@@ -68,6 +67,12 @@ class _MyHomePageState extends State<MyHomePage> {
     'defense': 1,
     'speed': 1,
   };
+
+  List extraStats = [
+    'attack',
+    'defense',
+    'speed',
+  ];
 
   // Global key that uniquely identifies the Form widget
   // and allows validation of the form.
@@ -160,25 +165,83 @@ class _MyHomePageState extends State<MyHomePage> {
                     // Add TextFormFields and ElevatedButton here.
                     const Padding(padding: EdgeInsets.all(10)),
                     _characterFormTextInput('Name', true),
-                    const Padding(padding: EdgeInsets.all(20)),
+                    const Padding(padding: EdgeInsets.all(10)),
 
                     const Divider(),
                     const Text("Basic Stats"),
                     _characterFormNumberInput('Health', true),
-                    const Padding(padding: EdgeInsets.all(10)),
                     _characterFormNumberInput('MP', false),
-                    const Padding(padding: EdgeInsets.all(10)),
                     _characterFormNumberInput('Level', false),
-                    const Padding(padding: EdgeInsets.all(20)),
+                    const Padding(padding: EdgeInsets.all(10)),
 
                     const Divider(),
                     const Text("Extra Stats (Optional)"),
-                    _characterFormNumberInput('Attack', true),
-                    const Padding(padding: EdgeInsets.all(10)),
-                    _characterFormNumberInput('Defense', true),
-                    const Padding(padding: EdgeInsets.all(10)),
-                    _characterFormNumberInput('Speed', true),
-                    const Padding(padding: EdgeInsets.all(20)),
+                    // _characterFormNumberInput('Attack', true),
+                    // const Padding(padding: EdgeInsets.all(10)),
+                    // _characterFormNumberInput('Defense', true),
+                    // const Padding(padding: EdgeInsets.all(10)),
+                    // _characterFormNumberInput('Speed', true),
+                    // const Padding(padding: EdgeInsets.all(20)),
+                    // Row(
+                    //   children: [
+                    //     Flexible(
+                    //       child: _characterFormNumberInput('Speed', true),
+                    //     ),
+                    //     IconButton(
+                    //       onPressed: () {
+                    //         // Respond to button press
+                    //       },
+                    //       icon: const Icon(Icons.remove),
+                    //     ),
+                    //   ],
+                    // ),
+                    // const Padding(padding: EdgeInsets.all(20)),
+
+                    ColumnBuilder(
+                      itemCount: extraStats.length,
+                      itemBuilder: (context, index) {
+                        return Container(
+                          padding: const EdgeInsets.all(0),
+                          child: Row(
+                            children: [
+                              Flexible(
+                                child: _characterFormNumberInput(
+                                    extraStats[index], true),
+                              ),
+                              IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    numberFormInput.remove(extraStats[index]);
+                                    extraStats.removeAt(index);
+                                  });
+                                },
+                                icon: const Icon(Icons.remove),
+                                color: Colors.red,
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+
+                    Center(
+                      child: Container(
+                        padding: const EdgeInsets.all(20),
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.add),
+                          label: const Text("Add Custom Stats"),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) =>
+                                  _buildAddStatsDialog(context),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+
+                    const Padding(padding: EdgeInsets.all(30)),
 
                     // For testing purposes
                     Text("Name : " + stringFormInput["name"].toString()),
@@ -194,6 +257,11 @@ class _MyHomePageState extends State<MyHomePage> {
                     Text("Defense : " + numberFormInput["defense"].toString()),
                     const Padding(padding: EdgeInsets.all(5)),
                     Text("Speed : " + numberFormInput["speed"].toString()),
+                    const Padding(padding: EdgeInsets.all(5)),
+                    Text("Extra Stats : " + extraStats.length.toString()),
+                    const Padding(padding: EdgeInsets.all(5)),
+                    Text(
+                        "Total Stats : " + (numberFormInput.length).toString()),
                   ],
                 ),
               ),
@@ -216,29 +284,33 @@ class _MyHomePageState extends State<MyHomePage> {
       label = label + " (Optional)";
     }
 
-    return TextFormField(
-      decoration: InputDecoration(
-        labelText: label,
-        //border: UnderlineInputBorder(),
-      ),
-      // The validator receives the text that the user has entered.
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          if (required) {
-            return 'Please do not leave the field empty';
-          } else {
-            // Do something that mark that the attributes arent included
-            stringFormInput[fieldName.toLowerCase()] = null;
+    return Container(
+      padding: EdgeInsets.all(20),
+      child: TextFormField(
+        decoration: InputDecoration(
+          labelText: label,
+          //border: UnderlineInputBorder(),
+        ),
+        // The validator receives the text that the user has entered.
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            if (required) {
+              return 'Please do not leave the field empty';
+            } else {
+              // Do something that mark that the attributes arent included
+              //stringFormInput[fieldName.toLowerCase()] = null;
+              stringFormInput.remove(fieldName.toLowerCase());
+            }
           }
-        }
-        return null;
-      },
-      onSaved: (String? value) {
-        //_name = value.toString();
-        if (value != null && value.isNotEmpty) {
-          stringFormInput.remove(fieldName.toLowerCase());
-        }
-      },
+          return null;
+        },
+        onSaved: (String? value) {
+          //_name = value.toString();
+          if (value != null && value.isNotEmpty) {
+            stringFormInput[fieldName.toLowerCase()] = value;
+          }
+        },
+      ),
     );
   }
 
@@ -248,36 +320,197 @@ class _MyHomePageState extends State<MyHomePage> {
       label = label + " (Optional)";
     }
 
-    return TextFormField(
-      decoration: InputDecoration(
-        labelText: label,
-        //border: UnderlineInputBorder(),
-      ),
-      // The validator receives the text that the user has entered.
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          if (required) {
-            return 'Please do not leave the field empty';
-          } else {
-            // Do something that mark that the attributes arent included
-            numberFormInput.remove(fieldName.toLowerCase());
+    return Container(
+      padding: EdgeInsets.all(20),
+      child: TextFormField(
+        decoration: InputDecoration(
+          labelText: label,
+          //border: UnderlineInputBorder(),
+        ),
+        // The validator receives the text that the user has entered.
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            if (required) {
+              return 'Please do not leave the field empty';
+            } else {
+              // Do something that mark that the attributes arent included
+              numberFormInput.remove(fieldName.toLowerCase());
+            }
+          } else if (int.parse(value) < 1) {
+            return 'Value cannot be less than 1';
           }
-        } else if (int.parse(value) < 1) {
-          return 'Value cannot be less than 1';
-        }
-        return null;
-      },
-      onSaved: (value) {
-        //_name = value.toString();
-        if (value != null && value.isNotEmpty) {
-          numberFormInput[fieldName.toLowerCase()] =
-              int.parse(value.toString());
-        }
-      },
-      keyboardType: TextInputType.number,
-      inputFormatters: <TextInputFormatter>[
-        FilteringTextInputFormatter.digitsOnly
+          return null;
+        },
+        onSaved: (value) {
+          //_name = value.toString();
+          if (value != null && value.isNotEmpty) {
+            numberFormInput[fieldName.toLowerCase()] =
+                int.parse(value.toString());
+          }
+        },
+        keyboardType: TextInputType.number,
+        inputFormatters: <TextInputFormatter>[
+          FilteringTextInputFormatter.digitsOnly
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAddStatsDialog(BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      title: const Text('Add New Stats'),
+      content: Column(mainAxisSize: MainAxisSize.min, children: [
+        //const Text('Insert your new stats name'),
+        AddStatsForm(
+          list: extraStats,
+          onStatsInput: (String stats) {
+            setState(() {
+              extraStats.add(stats);
+            });
+          },
+        ),
+      ]),
+      actions: [
+        TextButton(
+          style: TextButton.styleFrom(
+            textStyle: const TextStyle(fontSize: 17),
+          ),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: const Text('Close'),
+        ),
       ],
+      elevation: 16,
+    );
+  }
+}
+
+class ColumnBuilder extends StatelessWidget {
+  // Source code: https://gist.github.com/slightfoot/a75d6c368f1b823b594d9f04bf667231
+  final IndexedWidgetBuilder? itemBuilder;
+  final MainAxisAlignment? mainAxisAlignment;
+  final MainAxisSize? mainAxisSize;
+  final CrossAxisAlignment? crossAxisAlignment;
+  final TextDirection? textDirection;
+  final VerticalDirection? verticalDirection;
+  final int? itemCount;
+
+  const ColumnBuilder({
+    Key? key,
+    @required this.itemBuilder,
+    @required this.itemCount,
+    this.mainAxisAlignment: MainAxisAlignment.start,
+    this.mainAxisSize: MainAxisSize.max,
+    this.crossAxisAlignment: CrossAxisAlignment.center,
+    this.textDirection,
+    this.verticalDirection: VerticalDirection.down,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return new Column(
+      children: new List.generate(
+              this.itemCount!, (index) => this.itemBuilder!(context, index))
+          .toList(),
+    );
+  }
+}
+
+typedef StatsCallback = void Function(String stats);
+
+class AddStatsForm extends StatefulWidget {
+  const AddStatsForm({Key? key, required this.list, required this.onStatsInput})
+      : super(key: key);
+
+  final List list;
+  final StatsCallback onStatsInput;
+
+  @override
+  State<AddStatsForm> createState() => _AddStatsFormState();
+}
+
+class _AddStatsFormState extends State<AddStatsForm> {
+  // Untuk menyimpan nama stats
+  String statsName = '';
+
+  // Menyimpan nama yang tidak bisa dipakai selain dari stats
+  List reservedNames = [
+    'name',
+    'hp',
+    'mp',
+    'level',
+  ];
+
+  // Global key that uniquely identifies the Form widget
+  // and allows validation of the form.
+  final _statsFormKey = GlobalKey<FormState>();
+
+  // String _returnValue() {
+  //   return statsName;
+  // }
+
+  String _saveAndReturnValue() {
+    // For testing, delete later
+    print("Stats has been added");
+
+    if (_statsFormKey.currentState!.validate()) {
+      // If the form is valid, display a snackbar. In the real world,
+      // you'd often call a server or save the information in a database.
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Adding Stats')),
+      );
+      _statsFormKey.currentState!.save();
+      widget.onStatsInput(statsName);
+    }
+    return statsName;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        children: [
+          Form(
+            key: _statsFormKey,
+            child: TextFormField(
+              decoration: InputDecoration(
+                labelText: "Stats Name",
+                //border: UnderlineInputBorder(),
+              ),
+              // The validator receives the text that the user has entered.
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please do not leave the field empty';
+                } else if (widget.list.contains(value.toLowerCase()) ||
+                    reservedNames.contains(value.toLowerCase())) {
+                  return 'Stats already exists';
+                }
+                return null;
+              },
+              onSaved: (value) {
+                if (value != null && value.isNotEmpty) {
+                  statsName = value.toLowerCase();
+                }
+              },
+            ),
+          ),
+          const Padding(padding: EdgeInsets.all(10)),
+          TextButton(
+            style: TextButton.styleFrom(
+              textStyle: const TextStyle(fontSize: 17),
+            ),
+            onPressed: () {
+              setState(() {
+                _saveAndReturnValue();
+                //print(statsName);
+              });
+            },
+            child: const Text('Add'),
+          ),
+        ],
+      ),
     );
   }
 }
