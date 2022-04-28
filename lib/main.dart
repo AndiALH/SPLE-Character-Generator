@@ -59,6 +59,8 @@ class _MyHomePageState extends State<MyHomePage> {
     'name': 'character',
   };
 
+  List stringList = [""];
+
   Map<String, int?> numberFormInput = {
     'health': 10,
     'mp': 10,
@@ -68,11 +70,16 @@ class _MyHomePageState extends State<MyHomePage> {
     'speed': 1,
   };
 
+  List numberList = [""];
+
   List extraStats = [
     'attack',
     'defense',
     'speed',
   ];
+
+  // for testing
+  // var usrMap = {"name": "Tom", 'Email': 'tom@xyz.com'};
 
   // Global key that uniquely identifies the Form widget
   // and allows validation of the form.
@@ -92,11 +99,21 @@ class _MyHomePageState extends State<MyHomePage> {
       if (_formKey.currentState!.validate()) {
         // If the form is valid, display a snackbar. In the real world,
         // you'd often call a server or save the information in a database.
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Generating Character')),
-        );
+
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   const SnackBar(content: Text('Generating Character')),
+        // );
+
         _formKey.currentState!.save();
-        //_name = "abi";
+
+        // to get key list from all the attributes
+        stringList = stringFormInput.keys.toList();
+        numberList = numberFormInput.keys.toList();
+
+        showDialog(
+          context: context,
+          builder: (BuildContext context) => _confirmBuildDialog(context),
+        );
       }
     });
   }
@@ -380,6 +397,64 @@ class _MyHomePageState extends State<MyHomePage> {
             Navigator.of(context).pop();
           },
           child: const Text('Close'),
+        ),
+      ],
+      elevation: 16,
+    );
+  }
+
+  Widget _confirmBuildDialog(BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      title: const Text('Confirm Character Build'),
+      content: SingleChildScrollView(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Text('Stats of your character'),
+          const Padding(padding: EdgeInsets.all(5)),
+          ColumnBuilder(
+            itemCount: stringFormInput.length,
+            itemBuilder: (context, index) {
+              return Container(
+                padding: const EdgeInsets.all(0),
+                child: Text(stringList[index] +
+                    " : " +
+                    stringFormInput[stringList[index]].toString()),
+              );
+            },
+          ),
+          ColumnBuilder(
+            itemCount: numberFormInput.length,
+            itemBuilder: (context, index) {
+              return Container(
+                padding: const EdgeInsets.all(0),
+                child: Text(numberList[index] +
+                    " : " +
+                    numberFormInput[numberList[index]].toString()),
+              );
+            },
+          ),
+        ]),
+      ),
+      actions: [
+        TextButton(
+          style: TextButton.styleFrom(
+            textStyle: const TextStyle(fontSize: 17),
+          ),
+          onPressed: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Generating Character')),
+            );
+          },
+          child: const Text('Generate Character'),
+        ),
+        TextButton(
+          style: TextButton.styleFrom(
+            textStyle: const TextStyle(fontSize: 17),
+          ),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: const Text('Cancel'),
         ),
       ],
       elevation: 16,
