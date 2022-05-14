@@ -1,11 +1,30 @@
 import 'dart:ffi';
+import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:io/io.dart';
+import 'package:path/path.dart' as path;
 
 void main() {
   runApp(const MyApp());
 }
+
+// Future<File> getFileFromAssets(String path) async {
+//   final byteData = await rootBundle.load('assets/$path');
+
+//   final file = File('${(await getTemporaryDirectory()).path}/$path');
+//   await file.writeAsBytes(byteData.buffer
+//       .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+
+//   return file;
+// }
+
+// Future<String> loadAsset() async {
+//   return await rootBundle.loadString('assets/templates/test.txt');
+// }
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -17,14 +36,6 @@ class MyApp extends StatelessWidget {
       title: 'SPLE Character Generator',
       theme: ThemeData(
         // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
         primarySwatch: Colors.blue,
       ),
       home: const MyHomePage(title: 'SPLE Character Generator Home Page'),
@@ -35,15 +46,6 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key, required this.title}) : super(key: key);
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
@@ -51,16 +53,14 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  //int _counter = 0;
-
-  // all the variables to save the form value here
-  //String _name = 'Character';
+  // all the string variables to save the form value here
   Map<String, String?> stringFormInput = {
     'name': 'character',
   };
 
   List stringList = [""];
 
+  // all the int variables to save the form value here
   Map<String, int?> numberFormInput = {
     'health': 10,
     'mp': 10,
@@ -78,28 +78,15 @@ class _MyHomePageState extends State<MyHomePage> {
     'speed',
   ];
 
-  // for testing
-  // var usrMap = {"name": "Tom", 'Email': 'tom@xyz.com'};
-
   // Global key that uniquely identifies the Form widget
   // and allows validation of the form.
   final _formKey = GlobalKey<FormState>();
 
-  void _generateCharacter() {
+  void _processStats() {
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-
-      // For testing, delete later
-      print("Character has been generated");
+      //print("Character stats has been saved");
 
       if (_formKey.currentState!.validate()) {
-        // If the form is valid, display a snackbar. In the real world,
-        // you'd often call a server or save the information in a database.
-
         // ScaffoldMessenger.of(context).showSnackBar(
         //   const SnackBar(content: Text('Generating Character')),
         // );
@@ -110,12 +97,273 @@ class _MyHomePageState extends State<MyHomePage> {
         stringList = stringFormInput.keys.toList();
         numberList = numberFormInput.keys.toList();
 
+        // To copy template that is gonna used to generate object
+        copyTemplate();
+
         showDialog(
           context: context,
           builder: (BuildContext context) => _confirmBuildDialog(context),
         );
       }
     });
+  }
+
+  void _generateCharacter() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Generating Character')),
+    );
+
+    String charName = "Player";
+    bool nameChanged = false;
+    stringFormInput.forEach((key, value) {
+      if (key == 'name' && value != 'Player') {
+        charName = value.toString();
+        nameChanged = true;
+      }
+      addNewStringAttribute(key, value.toString());
+    });
+
+    numberFormInput.forEach((key, value) {
+      if (key == 'health') {
+        editHealthValue(value.toString());
+      } else {
+        addNewIntAttribute(key, value.toString());
+      }
+    });
+
+    if (nameChanged) editFileNameAndPath(charName);
+
+    // downloadFile();
+
+    // create output by copying all edited files
+    generateOutput();
+  }
+
+  void copyTemplate() {
+    // need to clear the directory first
+    try {
+      Directory('assets/generated/').deleteSync(recursive: true);
+    } on FileSystemException {}
+    // and then copy the template directory
+    copyPathSync('assets/templates/', 'assets/generated/');
+  }
+
+  void generateOutput() {
+    // need to clear the directory first
+    try {
+      Directory('assets/output/').deleteSync(recursive: true);
+    } on FileSystemException {}
+    // and then copy the edited file to the output folder
+    copyPathSync('assets/generated/', 'assets/output/');
+  }
+
+  // Future<File> addLine(String text) async {
+  //   final object = File('assets/generated/combatants/health/Health.gd');
+
+  //   int order = 10;
+  //   int counter = 0;
+  //   String texts = "";
+  //   var contents = await object.readAsLines();
+  //   contents.forEach((line) {
+  //     counter += 1;
+  //     if (counter == order) {
+  //       texts = texts + "\n";
+  //       texts = texts + text;
+  //     }
+  //     texts = texts + line + "\n";
+  //   });
+
+  //   // Add FileMode.append to add new line
+  //   // Add FileMode.write to write over the file
+  //   return object.writeAsString(texts, mode: FileMode.write);
+  // }
+
+  File get _playergd {
+    // return File('assets/templates/player.txt');
+    return File('assets/generated/Scripts/Player.gd');
+  }
+
+  File get _playertscn {
+    // return File('assets/templates/player.txt');
+    return File('assets/generated/Scenes/Player.tscn');
+  }
+
+  File get _playerHealthgd {
+    // return File('assets/templates/player.txt');
+    return File(
+        'assets/generated/Scenes/rpg_combat/combatants/health/PlayerHealth.gd');
+  }
+
+  File get _playerHealthtscn {
+    // return File('assets/templates/player.txt');
+    return File(
+        'assets/generated/Scenes/rpg_combat/combatants/health/PlayerHealth.tscn');
+  }
+
+  File get _playerCombatantgd {
+    // return File('assets/templates/player.txt');
+    return File(
+        'assets/generated/Scenes/rpg_combat/combatants/PlayerCombatant.gd');
+  }
+
+  File get _playerCombatanttscn {
+    // return File('assets/templates/player.txt');
+    return File(
+        'assets/generated/Scenes/rpg_combat/combatants/PlayerCombatant.tscn');
+  }
+
+  File get _combatanttscn {
+    // return File('assets/templates/player.txt');
+    return File('assets/generated/Scenes/rpg_combat/combatants/Combatant.tscn');
+  }
+
+  void editHealthValue(String value) {
+    File file = _playerHealthgd;
+
+    int order = 6;
+    int counter = 0;
+    String texts = "";
+    List contents = file.readAsLinesSync();
+    contents.forEach((line) {
+      counter += 1;
+      if (counter == order) {
+        texts = texts + "export var life = $value" + "\n";
+      } else if (counter == order + 1) {
+        texts = texts + "export var max_life = $value" + "\n";
+      } else {
+        texts = texts + line + "\n";
+      }
+    });
+
+    file.writeAsStringSync(texts, mode: FileMode.write);
+  }
+
+  void addNewStringAttribute(String key, String value) {
+    File file = _playerCombatantgd;
+
+    // change variable name for "name" because its generic
+    if (key == "name") key = "char_name";
+
+    file.writeAsStringSync("const $key = \"$value\"\n", mode: FileMode.append);
+  }
+
+  void addNewIntAttribute(String key, String value) {
+    File file = _playerCombatantgd;
+
+    file.writeAsStringSync("export (int) var $key = $value\n",
+        mode: FileMode.append);
+  }
+
+  void editFileNameAndPath(String name) async {
+    File playergd = _playergd;
+    File playertscn = _playertscn;
+    File playerHealthgd = _playerHealthgd;
+    File playerHealthtscn = _playerHealthtscn;
+    File playerCombatantgd = _playerCombatantgd;
+    File playerCombatanttscn = _playerCombatanttscn;
+
+    // no change, but has reference to PlayerHealth.tscn
+    File combatanttscn = _combatanttscn;
+
+    // change the file name
+    changeFileNameOnlySync(playergd, name + ".gd");
+    changeFileNameOnlySync(playerHealthgd, name + "Health.gd");
+    changeFileNameOnlySync(playerCombatantgd, name + "Combatant.gd");
+
+    // change the file name and assign them back for another uses
+    playertscn = changeFileNameOnlySync(playertscn, name + ".tscn");
+    playerHealthtscn =
+        changeFileNameOnlySync(playerHealthtscn, name + "Health.tscn");
+    playerHealthtscn =
+        changeFileNameOnlySync(playerHealthtscn, name + "Health.tscn");
+    playerCombatanttscn =
+        changeFileNameOnlySync(playerCombatanttscn, name + "Combatant.tscn");
+
+    String playertscnLine =
+        "[ext_resource path=\"res://Scripts/$name.gd\" type=\"Script\" id=2]";
+    String playerHealthtscnLine =
+        "[ext_resource path=\"res://Scenes/rpg_combat/combatants/health/${name}Health.gd\" type=\"Script\" id=1]";
+    String playerCombatanttscnLine =
+        "[ext_resource path=\"res://Scenes/rpg_combat/combatants/${name}Combatant.gd\" type=\"Script\" id=1]";
+
+    String playerCombatanttscnLine2 =
+        "[ext_resource path=\"res://Scenes/rpg_combat/combatants/health/${name}Health.tscn\" type=\"PackedScene\" id=3]";
+    String combatanttscnLine =
+        "[ext_resource path=\"res://Scenes/rpg_combat/combatants/health/${name}Health.tscn\" type=\"PackedScene\" id=2]";
+
+    String playertscnLine2 = "[node name=\"$name\" instance=ExtResource( 1 )]";
+    String playerHealthtscnLine2 =
+        "[node name=\"${name}Health\" type=\"Node\"]";
+    String playerCombatanttscnLine3 =
+        "[node name=\"${name}Combatant\" type=\"Node2D\"]";
+    String playerCombatanttscnLine4 =
+        "[node name=\"${name}Health\" parent=\".\" instance=ExtResource( 3 )]";
+    String combatanttscnLine2 =
+        "[node name=\"${name}Health\" parent=\".\" instance=ExtResource( 2 )]";
+
+    // change scene reference to script
+    changeScriptLine(playertscn, playertscnLine, 4);
+    changeScriptLine(playerHealthtscn, playerHealthtscnLine, 3);
+    changeScriptLine(playerCombatanttscn, playerCombatanttscnLine, 3);
+
+    // change scene reference to another related scene
+    changeScriptLine(playerCombatanttscn, playerCombatanttscnLine2, 5);
+    changeScriptLine(combatanttscn, combatanttscnLine, 4);
+
+    // change the node name on the scene
+    changeScriptLine(playertscn, playertscnLine2, 6);
+    changeScriptLine(playerHealthtscn, playerHealthtscnLine2, 5);
+    changeScriptLine(playerCombatanttscn, playerCombatanttscnLine3, 7);
+    changeScriptLine(playerCombatanttscn, playerCombatanttscnLine4, 14);
+    changeScriptLine(combatanttscn, combatanttscnLine2, 10);
+  }
+
+  // source: https://api.flutter.dev/flutter/dart-io/File/renameSync.html
+  // , https://stackoverflow.com/a/59896674
+  File changeFileNameOnlySync(File file, String newFileName) {
+    String dir = path.dirname(file.path);
+    String newPath = dir + "/" + newFileName;
+    //print('NewPath: ${newPath}');
+    return file.renameSync(newPath);
+  }
+
+  void changeScriptLine(File file, String text, int order) {
+    int counter = 0;
+    String texts = "";
+    List contents = file.readAsLinesSync();
+    contents.forEach((line) {
+      counter += 1;
+      if (counter == order) {
+        texts = texts + text + "\n";
+      } else {
+        texts = texts + line + "\n";
+      }
+    });
+
+    file.writeAsStringSync(texts, mode: FileMode.write);
+  }
+
+  // to get download directory
+  Future<String> get _downloadPath async {
+    Directory? directory = await getDownloadsDirectory();
+
+    if (directory != null) {
+      return directory.path;
+    }
+    // if download directory not found, change to documents directory
+    else {
+      directory = await getApplicationDocumentsDirectory();
+      return directory.path;
+    }
+  }
+
+  void downloadFile() async {
+    final path = await _downloadPath;
+    // final file = File('assets/generated/');
+    // print('path = $path');
+    // //return File('$path/counter.txt');
+    // file.copy('$path/generated_object');
+    copyPath('assets/generated/', '$path/generated_object');
   }
 
   @override
@@ -135,33 +383,6 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Center(
         // Center is a layout widget. It takes a single child and positions it
         // in the middle of the parent.
-        // child: Column(
-        //   // Column is also a layout widget. It takes a list of children and
-        //   // arranges them vertically. By default, it sizes itself to fit its
-        //   // children horizontally, and tries to be as tall as its parent.
-        //   //
-        //   // Invoke "debug painting" (press "p" in the console, choose the
-        //   // "Toggle Debug Paint" action from the Flutter Inspector in Android
-        //   // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-        //   // to see the wireframe for each widget.
-        //   //
-        //   // Column has various properties to control how it sizes itself and
-        //   // how it positions its children. Here we use mainAxisAlignment to
-        //   // center the children vertically; the main axis here is the vertical
-        //   // axis because Columns are vertical (the cross axis would be
-        //   // horizontal).
-        //   mainAxisAlignment: MainAxisAlignment.center,
-        //   children: <Widget>[
-        //     const Text(
-        //       'You have clicked the button this many times:',
-        //     ),
-        //     Text(
-        //       '$_counter',
-        //       style: Theme.of(context).textTheme.headline4,
-        //     ),
-        //     Image.asset('assets/images/0.png'),
-        //   ],
-        // ),
         child: ListView(
           children: <Widget>[
             Container(
@@ -287,7 +508,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _generateCharacter,
+        onPressed: _processStats,
         label: const Text('Generate'),
         tooltip: 'Generate Character',
         icon: const Icon(Icons.accessibility),
@@ -330,6 +551,16 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
+
+  // List<DropdownMenuItem<String>> get dropdownItems {
+  //   List<DropdownMenuItem<String>> menuItems = [
+  //     DropdownMenuItem(child: Text("Warrior Male"), value: "warrior_m.png"),
+  //     DropdownMenuItem(child: Text("Warrior Female"), value: "warrior_f.png"),
+  //     DropdownMenuItem(child: Text("Mage Male"), value: "mage_m.png"),
+  //     DropdownMenuItem(child: Text("Mage Female"), value: "mage_f.png"),
+  //   ];
+  //   return menuItems;
+  // }
 
   Widget _characterFormNumberInput(String fieldName, bool required) {
     String label = fieldName;
@@ -440,11 +671,7 @@ class _MyHomePageState extends State<MyHomePage> {
           style: TextButton.styleFrom(
             textStyle: const TextStyle(fontSize: 17),
           ),
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Generating Character')),
-            );
-          },
+          onPressed: _generateCharacter,
           child: const Text('Generate Character'),
         ),
         TextButton(
