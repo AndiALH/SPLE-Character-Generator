@@ -126,8 +126,10 @@ class _MyHomePageState extends State<MyHomePage> {
     numberFormInput.forEach((key, value) {
       if (key == 'health') {
         editHealthValue(value.toString());
-      } else {
+      } else if (key == 'mp' || key == 'level') {
         addNewIntAttribute(key, value.toString());
+      } else {
+        addNewIntAttribute("stat_" + key, value.toString());
       }
     });
 
@@ -268,9 +270,10 @@ class _MyHomePageState extends State<MyHomePage> {
     // change the file name
     changeFileNameOnlySync(playergd, name + ".gd");
     changeFileNameOnlySync(playerHealthgd, name + "Health.gd");
-    changeFileNameOnlySync(playerCombatantgd, name + "Combatant.gd");
 
     // change the file name and assign them back for another uses
+    playerCombatantgd =
+        changeFileNameOnlySync(playerCombatantgd, name + "Combatant.gd");
     playertscn = changeFileNameOnlySync(playertscn, name + ".tscn");
     playerHealthtscn =
         changeFileNameOnlySync(playerHealthtscn, name + "Health.tscn");
@@ -301,6 +304,8 @@ class _MyHomePageState extends State<MyHomePage> {
     String combatanttscnLine2 =
         "[node name=\"${name}Health\" parent=\".\" instance=ExtResource( 2 )]";
 
+    String playerCombatantgdLine = "class_name ${name}Combatant";
+
     // change scene reference to script
     changeScriptLine(playertscn, playertscnLine, 4);
     changeScriptLine(playerHealthtscn, playerHealthtscnLine, 3);
@@ -316,6 +321,9 @@ class _MyHomePageState extends State<MyHomePage> {
     changeScriptLine(playerCombatanttscn, playerCombatanttscnLine3, 7);
     changeScriptLine(playerCombatanttscn, playerCombatanttscnLine4, 14);
     changeScriptLine(combatanttscn, combatanttscnLine2, 10);
+
+    // change class name on the script
+    changeScriptLine(playerCombatantgd, playerCombatantgdLine, 3);
   }
 
   // source: https://api.flutter.dev/flutter/dart-io/File/renameSync.html
