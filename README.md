@@ -19,8 +19,8 @@ Things to do before running the project:
 - Create two empty folder, named generated and output on assets directory (assets/generated, assets/output)
 
 Dependency used for the project:
-- path_provider(https://pub.dev/packages/path_provider)
-- io(https://pub.dev/packages/io)
-- path(https://pub.dev/packages/path)
+- [path_provider](https://pub.dev/packages/path_provider)
+- [io](https://pub.dev/packages/io)
+- [path](https://pub.dev/packages/path)
 
 ------
