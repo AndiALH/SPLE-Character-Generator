@@ -12,20 +12,6 @@ void main() {
   runApp(const MyApp());
 }
 
-// Future<File> getFileFromAssets(String path) async {
-//   final byteData = await rootBundle.load('assets/$path');
-
-//   final file = File('${(await getTemporaryDirectory()).path}/$path');
-//   await file.writeAsBytes(byteData.buffer
-//       .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
-
-//   return file;
-// }
-
-// Future<String> loadAsset() async {
-//   return await rootBundle.loadString('assets/templates/test.txt');
-// }
-
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
@@ -83,22 +69,17 @@ class _MyHomePageState extends State<MyHomePage> {
   final _formKey = GlobalKey<FormState>();
 
   void _processStats() {
+    // to process and save all of the input stats
+
     setState(() {
       //print("Character stats has been saved");
 
       if (_formKey.currentState!.validate()) {
-        // ScaffoldMessenger.of(context).showSnackBar(
-        //   const SnackBar(content: Text('Generating Character')),
-        // );
-
         _formKey.currentState!.save();
 
         // to get key list from all the attributes
         stringList = stringFormInput.keys.toList();
         numberList = numberFormInput.keys.toList();
-
-        // To copy template that is gonna used to generate object
-        copyTemplate();
 
         showDialog(
           context: context,
@@ -109,9 +90,14 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _generateCharacter() {
+    // to start generating character objects based on input stats
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Generating Character')),
     );
+
+    // To copy template that is gonna used to generate object
+    copyTemplate();
 
     String charName = "Player";
     bool nameChanged = false;
@@ -135,13 +121,16 @@ class _MyHomePageState extends State<MyHomePage> {
 
     if (nameChanged) editFileNameAndPath(charName);
 
-    // downloadFile();
-
     // create output by copying all edited files
     generateOutput();
+
+    // use to put the output file in the download directory instead
+    // downloadFile();
   }
 
   void copyTemplate() {
+    // to copy the object template which will be used
+
     // need to clear the directory first
     try {
       Directory('assets/generated/').deleteSync(recursive: true);
@@ -151,6 +140,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void generateOutput() {
+    // to generate the processed template object
+
     // need to clear the directory first
     try {
       Directory('assets/output/').deleteSync(recursive: true);
@@ -159,26 +150,7 @@ class _MyHomePageState extends State<MyHomePage> {
     copyPathSync('assets/generated/', 'assets/output/');
   }
 
-  // Future<File> addLine(String text) async {
-  //   final object = File('assets/generated/combatants/health/Health.gd');
-
-  //   int order = 10;
-  //   int counter = 0;
-  //   String texts = "";
-  //   var contents = await object.readAsLines();
-  //   contents.forEach((line) {
-  //     counter += 1;
-  //     if (counter == order) {
-  //       texts = texts + "\n";
-  //       texts = texts + text;
-  //     }
-  //     texts = texts + line + "\n";
-  //   });
-
-  //   // Add FileMode.append to add new line
-  //   // Add FileMode.write to write over the file
-  //   return object.writeAsString(texts, mode: FileMode.write);
-  // }
+  // to get all the files that are gonna be edited:
 
   File get _playergd {
     // return File('assets/templates/player.txt');
@@ -220,6 +192,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void editHealthValue(String value) {
+    // to edit the health value of the game object
+
     File file = _playerHealthgd;
 
     int order = 6;
@@ -241,6 +215,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void addNewStringAttribute(String key, String value) {
+    // to add new string attribute to the game object
+
     File file = _playerCombatantgd;
 
     // change variable name for "name" because its generic
@@ -250,6 +226,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void addNewIntAttribute(String key, String value) {
+    // to add new integer attribute to the game object
+
     File file = _playerCombatantgd;
 
     file.writeAsStringSync("export (int) var $key = $value\n",
@@ -257,6 +235,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void editFileNameAndPath(String name) async {
+    // to edit all the name and the path reference of certain files
+
     File playergd = _playergd;
     File playertscn = _playertscn;
     File playerHealthgd = _playerHealthgd;
@@ -329,6 +309,8 @@ class _MyHomePageState extends State<MyHomePage> {
   // source: https://api.flutter.dev/flutter/dart-io/File/renameSync.html
   // , https://stackoverflow.com/a/59896674
   File changeFileNameOnlySync(File file, String newFileName) {
+    // to rename a file
+
     String dir = path.dirname(file.path);
     String newPath = dir + "/" + newFileName;
     //print('NewPath: ${newPath}');
@@ -336,6 +318,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void changeScriptLine(File file, String text, int order) {
+    // to change a line of a file
+
     int counter = 0;
     String texts = "";
     List contents = file.readAsLinesSync();
@@ -351,8 +335,8 @@ class _MyHomePageState extends State<MyHomePage> {
     file.writeAsStringSync(texts, mode: FileMode.write);
   }
 
-  // to get download directory
   Future<String> get _downloadPath async {
+    // to get download directory (currently unused)
     Directory? directory = await getDownloadsDirectory();
 
     if (directory != null) {
@@ -366,11 +350,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void downloadFile() async {
+    // to generate output on the download directory (currently unused)
     final path = await _downloadPath;
-    // final file = File('assets/generated/');
-    // print('path = $path');
-    // //return File('$path/counter.txt');
-    // file.copy('$path/generated_object');
     copyPath('assets/generated/', '$path/generated_object');
   }
 
@@ -422,26 +403,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
                     const Divider(),
                     const Text("Extra Stats (Optional)"),
-                    // _characterFormNumberInput('Attack', true),
-                    // const Padding(padding: EdgeInsets.all(10)),
-                    // _characterFormNumberInput('Defense', true),
-                    // const Padding(padding: EdgeInsets.all(10)),
-                    // _characterFormNumberInput('Speed', true),
-                    // const Padding(padding: EdgeInsets.all(20)),
-                    // Row(
-                    //   children: [
-                    //     Flexible(
-                    //       child: _characterFormNumberInput('Speed', true),
-                    //     ),
-                    //     IconButton(
-                    //       onPressed: () {
-                    //         // Respond to button press
-                    //       },
-                    //       icon: const Icon(Icons.remove),
-                    //     ),
-                    //   ],
-                    // ),
-                    // const Padding(padding: EdgeInsets.all(20)),
 
                     ColumnBuilder(
                       itemCount: extraStats.length,
@@ -490,24 +451,24 @@ class _MyHomePageState extends State<MyHomePage> {
                     const Padding(padding: EdgeInsets.all(30)),
 
                     // For testing purposes
-                    Text("Name : " + stringFormInput["name"].toString()),
-                    const Padding(padding: EdgeInsets.all(5)),
-                    Text("Health : " + numberFormInput["health"].toString()),
-                    const Padding(padding: EdgeInsets.all(5)),
-                    Text("MP : " + numberFormInput["mp"].toString()),
-                    const Padding(padding: EdgeInsets.all(5)),
-                    Text("Level : " + numberFormInput["level"].toString()),
-                    const Padding(padding: EdgeInsets.all(5)),
-                    Text("Attack : " + numberFormInput["attack"].toString()),
-                    const Padding(padding: EdgeInsets.all(5)),
-                    Text("Defense : " + numberFormInput["defense"].toString()),
-                    const Padding(padding: EdgeInsets.all(5)),
-                    Text("Speed : " + numberFormInput["speed"].toString()),
-                    const Padding(padding: EdgeInsets.all(5)),
-                    Text("Extra Stats : " + extraStats.length.toString()),
-                    const Padding(padding: EdgeInsets.all(5)),
-                    Text(
-                        "Total Stats : " + (numberFormInput.length).toString()),
+                    // Text("Name : " + stringFormInput["name"].toString()),
+                    // const Padding(padding: EdgeInsets.all(5)),
+                    // Text("Health : " + numberFormInput["health"].toString()),
+                    // const Padding(padding: EdgeInsets.all(5)),
+                    // Text("MP : " + numberFormInput["mp"].toString()),
+                    // const Padding(padding: EdgeInsets.all(5)),
+                    // Text("Level : " + numberFormInput["level"].toString()),
+                    // const Padding(padding: EdgeInsets.all(5)),
+                    // Text("Attack : " + numberFormInput["attack"].toString()),
+                    // const Padding(padding: EdgeInsets.all(5)),
+                    // Text("Defense : " + numberFormInput["defense"].toString()),
+                    // const Padding(padding: EdgeInsets.all(5)),
+                    // Text("Speed : " + numberFormInput["speed"].toString()),
+                    // const Padding(padding: EdgeInsets.all(5)),
+                    // Text("Extra Stats : " + extraStats.length.toString()),
+                    // const Padding(padding: EdgeInsets.all(5)),
+                    // Text(
+                    //     "Total Stats : " + (numberFormInput.length).toString()),
                   ],
                 ),
               ),
@@ -520,7 +481,7 @@ class _MyHomePageState extends State<MyHomePage> {
         label: const Text('Generate'),
         tooltip: 'Generate Character',
         icon: const Icon(Icons.accessibility),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
     );
   }
 
@@ -559,16 +520,6 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
-
-  // List<DropdownMenuItem<String>> get dropdownItems {
-  //   List<DropdownMenuItem<String>> menuItems = [
-  //     DropdownMenuItem(child: Text("Warrior Male"), value: "warrior_m.png"),
-  //     DropdownMenuItem(child: Text("Warrior Female"), value: "warrior_f.png"),
-  //     DropdownMenuItem(child: Text("Mage Male"), value: "mage_m.png"),
-  //     DropdownMenuItem(child: Text("Mage Female"), value: "mage_f.png"),
-  //   ];
-  //   return menuItems;
-  // }
 
   Widget _characterFormNumberInput(String fieldName, bool required) {
     String label = fieldName;
@@ -742,10 +693,10 @@ class AddStatsForm extends StatefulWidget {
 }
 
 class _AddStatsFormState extends State<AddStatsForm> {
-  // Untuk menyimpan nama stats
+  // to save stats names
   String statsName = '';
 
-  // Menyimpan nama yang tidak bisa dipakai selain dari stats
+  // to save all the reserved names that can't be used
   List reservedNames = [
     'name',
     'hp',
@@ -757,20 +708,11 @@ class _AddStatsFormState extends State<AddStatsForm> {
   // and allows validation of the form.
   final _statsFormKey = GlobalKey<FormState>();
 
-  // String _returnValue() {
-  //   return statsName;
-  // }
-
   String _saveAndReturnValue() {
-    // For testing, delete later
-    print("Stats has been added");
-
     if (_statsFormKey.currentState!.validate()) {
-      // If the form is valid, display a snackbar. In the real world,
-      // you'd often call a server or save the information in a database.
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Adding Stats')),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   const SnackBar(content: Text('Adding Stats')),
+      // );
       _statsFormKey.currentState!.save();
       widget.onStatsInput(statsName);
     }
@@ -785,7 +727,7 @@ class _AddStatsFormState extends State<AddStatsForm> {
           Form(
             key: _statsFormKey,
             child: TextFormField(
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: "Stats Name",
                 //border: UnderlineInputBorder(),
               ),
