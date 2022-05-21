@@ -63,6 +63,33 @@ class _MyHomePageState extends State<MyHomePage> {
     'speed',
   ];
 
+  List<DropdownMenuItem<String>> get dropdownItems {
+    List<DropdownMenuItem<String>> menuItems = [
+      const DropdownMenuItem(
+          child: Text("Warrior Male"), value: "warrior_m.png"),
+      const DropdownMenuItem(
+          child: Text("Warrior Female"), value: "warrior_f.png"),
+      const DropdownMenuItem(child: Text("Mage Male"), value: "mage_m.png"),
+      const DropdownMenuItem(child: Text("Mage Female"), value: "mage_f.png"),
+      const DropdownMenuItem(child: Text("Healer Male"), value: "healer_m.png"),
+      const DropdownMenuItem(
+          child: Text("Healer Female"), value: "healer_f.png"),
+      const DropdownMenuItem(child: Text("Ranger Male"), value: "ranger_m.png"),
+      const DropdownMenuItem(
+          child: Text("Ranger Female"), value: "ranger_f.png"),
+      const DropdownMenuItem(child: Text("Ninja Male"), value: "ninja_m.png"),
+      const DropdownMenuItem(child: Text("Ninja Female"), value: "ninja_f.png"),
+      const DropdownMenuItem(
+          child: Text("Townfolk Male"), value: "townfolk1_m.png"),
+      const DropdownMenuItem(
+          child: Text("Townfolk Female"), value: "townfolk1_f.png"),
+    ];
+    return menuItems;
+  }
+
+  // String selectedValue = "warrior_m.png";
+  String? selectedSpriteValue = null;
+
   // Global key that uniquely identifies the Form widget
   // and allows validation of the form.
   final _formKey = GlobalKey<FormState>();
@@ -117,6 +144,11 @@ class _MyHomePageState extends State<MyHomePage> {
         addNewIntAttribute("stat_" + key, value.toString());
       }
     });
+
+    // to change sprite of the character
+    if (selectedSpriteValue != "warrior_m.png") {
+      changeCharacterSprite(selectedSpriteValue.toString());
+    }
 
     if (nameChanged) editFileNameAndPath(charName);
 
@@ -231,6 +263,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
     file.writeAsStringSync("export (int) var $key = $value\n",
         mode: FileMode.append);
+  }
+
+  void changeCharacterSprite(String spriteValue) {
+    File file = _playergd;
+    String line = "\tvar texture = \"$spriteValue\"";
+    changeScriptLine(file, line, 14);
   }
 
   void editFileNameAndPath(String name) async {
@@ -391,6 +429,35 @@ class _MyHomePageState extends State<MyHomePage> {
                     // Add TextFormFields and ElevatedButton here.
                     const Padding(padding: EdgeInsets.all(10)),
                     _characterFormTextInput('Name', true),
+
+                    // dropdown for sprites selection
+                    Container(
+                      padding: EdgeInsets.all(20),
+                      child: DropdownButtonFormField(
+                          decoration: InputDecoration(
+                            enabledBorder: OutlineInputBorder(
+                              borderSide:
+                                  BorderSide(color: Colors.grey, width: 1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            border: OutlineInputBorder(
+                              borderSide:
+                                  BorderSide(color: Colors.grey, width: 1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          hint: Text("Select a sprite for your character"),
+                          value: selectedSpriteValue,
+                          validator: (value) =>
+                              value == null ? "Please select a sprite" : null,
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              selectedSpriteValue = newValue!;
+                            });
+                          },
+                          items: dropdownItems),
+                    ),
+
                     const Padding(padding: EdgeInsets.all(10)),
 
                     const Divider(),
