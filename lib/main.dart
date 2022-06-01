@@ -462,9 +462,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
                     const Divider(),
                     const Text("Basic Stats"),
-                    _characterFormNumberInput('Health', true),
-                    _characterFormNumberInput('MP', false),
-                    _characterFormNumberInput('Level', false),
+                    _characterFormNumberInput('Health', true, true),
+                    _characterFormNumberInput('MP', false, true),
+                    _characterFormNumberInput('Level', false, true),
                     const Padding(padding: EdgeInsets.all(10)),
 
                     const Divider(),
@@ -479,7 +479,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             children: [
                               Flexible(
                                 child: _characterFormNumberInput(
-                                    extraStats[index], true),
+                                    extraStats[index], true, false),
                               ),
                               IconButton(
                                 onPressed: () {
@@ -587,7 +587,8 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget _characterFormNumberInput(String fieldName, bool required) {
+  Widget _characterFormNumberInput(
+      String fieldName, bool required, bool moreThanZero) {
     String label = fieldName;
     if (!required) {
       label = label + " (Optional)";
@@ -609,7 +610,7 @@ class _MyHomePageState extends State<MyHomePage> {
               // Do something that mark that the attributes arent included
               numberFormInput.remove(fieldName.toLowerCase());
             }
-          } else if (int.parse(value) < 1) {
+          } else if (moreThanZero && int.parse(value) < 1) {
             return 'Value cannot be less than 1';
           }
           return null;
@@ -671,7 +672,7 @@ class _MyHomePageState extends State<MyHomePage> {
             itemCount: stringFormInput.length,
             itemBuilder: (context, index) {
               return Container(
-                padding: const EdgeInsets.all(0),
+                padding: const EdgeInsets.all(1),
                 child: Text(stringList[index] +
                     " : " +
                     stringFormInput[stringList[index]].toString()),
@@ -682,13 +683,16 @@ class _MyHomePageState extends State<MyHomePage> {
             itemCount: numberFormInput.length,
             itemBuilder: (context, index) {
               return Container(
-                padding: const EdgeInsets.all(0),
+                padding: const EdgeInsets.all(1),
                 child: Text(numberList[index] +
                     " : " +
                     numberFormInput[numberList[index]].toString()),
               );
             },
           ),
+          Container(
+              padding: const EdgeInsets.all(1),
+              child: Text("sprite : " + selectedSpriteValue.toString())),
         ]),
       ),
       actions: [
